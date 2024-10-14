@@ -14,6 +14,9 @@ type Parser struct {
     currToken token.Token
     peekToken token.Token
     errors []string
+
+    prefixFunc map[token.TokenType]prefixParseFn
+    infixFunc map[token.TokenType]infixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -21,6 +24,14 @@ func New(l *lexer.Lexer) *Parser {
         l:l,
         errors: []string{},
     }
+
+    // initialise the prefix map and register a function to parse ids 
+    p.prefixFunc=make(map[token.TokenType]prefixParseFn)
+    p.registerPrefixFunc(token.IDENTIFIER,p.parseIdentifier)
+    p.registerPrefixFunc(token.INTEGER,p.parseIntLiteral)
+    p.registerPrefixFunc(token.MINUS,p.parsePrefixExpression)
+    p.registerPrefixFunc(token.BANG,p.parsePrefixExpression)
+
     //Read two tokens to set the current and peek tokens
     p.next()
     p.next()
@@ -68,7 +79,7 @@ func (p* Parser) parseStmt() ast.Statement {
         case token.RETURN:
             return p.parseReturnStmt()
         default:
-            return nil
+            return p.parseExpressionStmt()
     }
 }
 
