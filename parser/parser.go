@@ -65,11 +65,30 @@ func (p* Parser) parseStmt() ast.Statement {
     switch p.currToken.Type {
         case token.LET:
             return p.parseLetStmt()
+        case token.RETURN:
+            return p.parseReturnStmt()
         default:
             return nil
     }
 }
 
+
+func (p* Parser) parseReturnStmt() ast.Statement {
+    stmt:=&ast.ReturnStmt{}
+    stmt.Token=p.currToken // the token.RETURN
+
+    p.next()
+
+    for !p.isCurr(token.SEMICOLON) {
+        if p.isCurr(token.EOF) {
+            p.addError(token.SEMICOLON)
+            return nil 
+        }
+        p.next()
+    }
+
+    return stmt 
+}
 
 func (p* Parser) parseLetStmt() ast.Statement {
     stmt:=&ast.LetStmt{}

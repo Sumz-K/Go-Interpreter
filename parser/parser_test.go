@@ -1,10 +1,10 @@
 package parser
 
+import (
+	"testing"
 
-import(
-    "testing"
-    "github.com/Sumz-K/Go-Interpreter/lexer"
-    "github.com/Sumz-K/Go-Interpreter/ast"
+	"github.com/Sumz-K/Go-Interpreter/ast"
+	"github.com/Sumz-K/Go-Interpreter/lexer"
 )
 
 func TestLetStatements(t *testing.T) {
@@ -84,5 +84,46 @@ func testLetStmtHelper(t *testing.T, stmt ast.Statement,id string) bool{
 
     return true 
 
+
+}
+
+
+
+func TestReturnStatements(t *testing.T) {
+        input := `
+    return 5;
+    return 10;
+    return 993322;
+    `
+
+    l:=lexer.New(input)
+
+    p:=New(l)
+
+    program:=p.ParseProgram()
+
+    checkErrors(t,p)
+    
+    if program==nil {
+        t.Fatalf("Parse Program() returned nil for return statements")
+    }
+
+    if len(program.Statements)!=3 {
+        t.Fatalf("Needed 3 elements after parsing returns got %d",len(program.Statements))
+    }
+
+    for _,stmt:= range program.Statements {
+        returnStmt,ok:=stmt.(*ast.ReturnStmt)
+        
+        if !ok {
+            t.Errorf("Statement not of type return, got %T",stmt)
+            continue
+        }
+
+        if returnStmt.TokenValue()!="return" {
+            t.Errorf("Expected token name return got %q",returnStmt.TokenValue())
+        }
+    }
+    
 
 }

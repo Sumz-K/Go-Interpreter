@@ -70,3 +70,16 @@ func (id *Identifier) TokenValue() string {
 
 
 func (id *Identifier) ExpressionNode() {}
+
+type ReturnStmt struct {
+    Token token.Token //the return token
+    ReturnValue Expression
+}
+
+
+func (rs *ReturnStmt) StatementNode() {}
+
+func (rs *ReturnStmt) TokenValue() string {
+    return rs.Token.Value
+}
+
