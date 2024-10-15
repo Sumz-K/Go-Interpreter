@@ -181,3 +181,39 @@ func (pe *PrefixExpression) String() string {
 
     return buf.String()
 }
+
+/*
+to represent:
+5+5
+5-5
+5*5
+5/5
+5>5
+5<5
+5==5
+5!=5
+*/
+type InfixExpression struct {
+    Token token.Token // the operator token, like +
+    LeftExpr Expression
+    Operator string
+    RightExpr Expression
+}
+
+func (ie *InfixExpression) TokenValue() string {
+    return ie.Token.Value
+}
+
+func (ie *InfixExpression) ExpressionNode() {}
+
+func (ie* InfixExpression) String() string {
+    var buf bytes.Buffer
+    buf.WriteString("(")
+    buf.WriteString(ie.LeftExpr.String())
+    buf.WriteString(" "+ ie.Operator+ " ")
+    buf.WriteString(ie.RightExpr.String())
+    buf.WriteString(")")
+
+    return buf.String()
+}
+

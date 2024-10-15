@@ -235,3 +235,56 @@ func compareInt(t *testing.T,il ast.Expression,val int64) bool{
     }
     return true
 }
+
+
+func TestParsingInfixExpressions(t *testing.T) { 
+    infixTests := []struct {
+        input      string
+        leftValue  int64
+        operator   string
+        rightValue int64
+    }{
+        {"5 + 5;", 5, "+", 5},
+        {"5 - 5;", 5, "-", 5},
+        {"5 * 5;", 5, "*", 5},
+        {"5 / 5;", 5, "/", 5},
+        {"5 > 5;", 5, ">", 5},
+        {"5 < 5;", 5, "<", 5},
+        {"5 == 5;", 5, "==", 5},
+        {"5 != 5;", 5, "!=", 5},
+    }
+
+    for _,tt:= range infixTests {
+        l:=lexer.New(tt.input)
+        p:=New(l)
+        program:=p.ParseProgram()
+        checkErrors(t,p)
+
+        if len(program.Statements)!=1 {
+            t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+        }
+
+        stmt,ok:=program.Statements[0].(*ast.ExpressionStmt)
+        if !ok {
+            t.Fatalf("The statement is not an expression statement got %T",program.Statements[0])
+        }
+
+        expr,ok:=stmt.Expression.(*ast.InfixExpression)
+        if !ok {
+            t.Fatalf("The expression is not an infix expression, got %T",stmt.Expression)
+        }
+
+        if !compareInt(t,expr.LeftExpr,tt.leftValue) {
+            return 
+        }
+
+        if tt.operator!=expr.Operator {
+            t.Errorf("Incorrect operator,expected %v got %v",tt.operator,expr.Operator)
+        }
+
+        if !compareInt(t,expr.RightExpr,tt.rightValue) {
+            return 
+        }
+    }
+
+}

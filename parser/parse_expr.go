@@ -12,7 +12,8 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	EQUALS // == LESSGREATER // > or <
+	EQUALS // ==
+	LESSGREATER // > or <
 	SUM //+
 	PRODUCT //*
 	PREFIX //-Xor!X
@@ -28,6 +29,34 @@ type (
 	prefixParseFn func() ast.Expression // in prefix cases nothing preceeds the token so no parameter
 	infixParseFn func(ast.Expression) ast.Expression  // in infix cases the tokens to the left of the operator need to be passed in as a parameter
 )
+var precedences = map[token.TokenType]int {
+	token.EQ: EQUALS,
+	token.NOTEQ:EQUALS,
+	token.LT:LESSGREATER,
+	token.GT:LESSGREATER,
+	token.PLUS:SUM,
+	token.MINUS:SUM,
+	token.ASTERISK:PRODUCT,
+	token.SLASH:PRODUCT,
+
+}
+
+func (p *Parser) currPrecedence() int {
+	ans,ok:=precedences[p.currToken.Type]
+	if ok {
+		return ans
+	}
+	return LOWEST
+}
+
+func (p *Parser) peekPrecedence() int {
+	ans,ok:=precedences[p.peekToken.Type]
+	if ok {
+		return ans
+	}
+	return LOWEST
+}
+
 
 func (p* Parser) registerInfixFunc(tt token.TokenType, fn infixParseFn) {
 	p.infixFunc[tt]=fn
@@ -49,6 +78,29 @@ func (p* Parser) parseExpressionStmt() *ast.ExpressionStmt {
 	return stmt 
 }
 
+func (p* Parser) parseExpression(precedence int) ast.Expression {
+	prefix:=p.prefixFunc[p.currToken.Type] //check if a function corresponding to when the token is in prefix position
+	// 5*5
+	if prefix==nil {
+		p.noPrefixFuncErr(p.currToken.Type)
+		return nil 
+	}
+
+	leftExpr:=prefix() // if the function is present call the function and obtain the expression
+
+	for p.peekToken.Type!=token.SEMICOLON && precedence<p.peekPrecedence(){
+		infix:=p.infixFunc[p.peekToken.Type]
+		if infix==nil {
+			return leftExpr
+		}
+		p.next()
+		leftExpr=infix(leftExpr)
+	}
+	return  leftExpr
+
+}
+
+
 func (p* Parser) isNext(tok token.TokenType) bool {
 	return p.peekToken.Type==tok 
 }
@@ -57,20 +109,6 @@ func (p* Parser) noPrefixFuncErr(tok token.TokenType) {
 	msg:=fmt.Sprintf("There exists no prefix parse function for token %s",tok)
 	p.errors = append(p.errors, msg)
 }
-
-
-func (p* Parser) parseExpression(precedence int) ast.Expression {
-	prefix:=p.prefixFunc[p.currToken.Type] //check if a function corresponding to when the token is in prefix position
-	if prefix==nil {
-		p.noPrefixFuncErr(p.currToken.Type)
-		return nil 
-	}
-
-	leftExpr:=prefix() // if the function is present call the function and obtain the expression
-	return  leftExpr
-
-}
-
 
 
 func (p *Parser) parseIdentifier() ast.Expression {
@@ -106,4 +144,18 @@ func (p* Parser) parsePrefixExpression() ast.Expression{
 
 	expr.Right=p.parseExpression(PREFIX)
 	return expr 
+}
+
+
+
+func (p* Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	ie:=&ast.InfixExpression{
+		Token: p.currToken,
+		Operator: p.currToken.Value,
+		LeftExpr: left,
+	}
+	prec:=p.currPrecedence()
+	p.next()
+	ie.RightExpr=p.parseExpression(prec)
+	return ie
 }
