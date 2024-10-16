@@ -288,3 +288,143 @@ func TestParsingInfixExpressions(t *testing.T) {
     }
 
 }
+
+func TestParseBoolean(t *testing.T) {
+    tests:=[]struct{
+        input string 
+        expected string 
+    }{
+        {"true", "true"},
+        {"false","false"},
+    }
+
+    for _,tt:=range tests {
+        l:=lexer.New(tt.input)
+        p:=New(l)
+        program:=p.ParseProgram()
+        checkErrors(t,p)
+
+        if len(program.Statements)!=1 {
+            t.Fatalf("Incorrect number of statements, expected 1 got %d",len(program.Statements))
+        }
+
+        stmt,ok:=program.Statements[0].(*ast.ExpressionStmt)
+        if !ok {
+            t.Fatalf("The statement is not an expression statement got %T",program.Statements[0])
+        }
+
+        boolStmt,ok:=stmt.Expression.(*ast.Boolean)
+        if !ok {
+            t.Fatalf("The expression is not a boolean expression, got %T",stmt.Expression)
+        }
+
+        if boolStmt.Token.Value!=tt.expected {
+            t.Errorf("Expected %v got %v",tt.expected,boolStmt.Value)
+        }
+        
+    }
+}
+
+func TestIfExpression(t *testing.T) {
+    input:=`if (x > y) { x }`
+
+    l:=lexer.New(input)
+    p:=New(l)
+    program:=p.ParseProgram()
+    checkErrors(t,p)
+
+    if len(program.Statements)!=1 {
+        t.Fatalf("Incorrect number of statements, expected 1 got %d",len(program.Statements))
+    }
+
+    stmt,ok:=program.Statements[0].(*ast.ExpressionStmt)
+    if !ok {
+        t.Fatalf("Expected an expression stmt got %T",program.Statements[0])
+    }
+
+    ifstmt,ok:=stmt.Expression.(*ast.IfExpression)
+    if !ok {
+        t.Fatalf("Expected an if expression got %T",stmt.Expression)
+    }
+
+    if len(ifstmt.Consequence.Statements)!=1 {
+        t.Errorf("Expected 1 stmt in consequence got %d",len(ifstmt.Consequence.Statements))
+    }
+
+    cons,ok:=ifstmt.Consequence.Statements[0].(*ast.ExpressionStmt)
+    if !ok {
+        t.Errorf("Expected an expression stmt for conseq got %T",ifstmt.Consequence.Statements[0])
+    }
+
+    exp,ok:=cons.Expression.(*ast.Identifier)
+    if !ok {
+        t.Errorf("Expected an identifier for conseq expression got %T",cons.Expression)
+    }
+
+    if exp.Token.Value!="x" {
+        t.Errorf("Expected x as consequence got %s",exp.Token.Value)
+    }
+
+    if ifstmt.Alternative!=nil {
+        t.Errorf("Did not expect an else stmt got %v",ifstmt.Alternative)
+    }
+
+}
+
+func TestIfElse(t *testing.T) {
+    input:=`if (x > y) { x } else {y}`
+
+    l:=lexer.New(input)
+    p:=New(l)
+    program:=p.ParseProgram()
+    checkErrors(t,p)
+
+    if len(program.Statements)!=1 {
+        t.Fatalf("Incorrect number of statements, expected 1 got %d",len(program.Statements))
+    }
+
+    stmt,ok:=program.Statements[0].(*ast.ExpressionStmt)
+    if !ok {
+        t.Fatalf("Expected an expression stmt got %T",program.Statements[0])
+    }
+
+    ifstmt,ok:=stmt.Expression.(*ast.IfExpression)
+    if !ok {
+        t.Fatalf("Expected an if expression got %T",stmt.Expression)
+    }
+
+    if len(ifstmt.Consequence.Statements)!=1 {
+        t.Errorf("Expected 1 stmt in consequence got %d",len(ifstmt.Consequence.Statements))
+    }
+
+    cons,ok:=ifstmt.Consequence.Statements[0].(*ast.ExpressionStmt)
+    if !ok {
+        t.Errorf("Expected an expression stmt for conseq got %T",ifstmt.Consequence.Statements[0])
+    }
+
+    exp,ok:=cons.Expression.(*ast.Identifier)
+    if !ok {
+        t.Errorf("Expected an identifier for conseq expression got %T",cons.Expression)
+    }
+
+    if exp.Token.Value!="x" {
+        t.Errorf("Expected x as consequence got %s",exp.Token.Value)
+    }
+
+    if ifstmt.Alternative==nil {
+        t.Errorf("expected an else stmt got nil")
+    }
+    alt,ok:=ifstmt.Alternative.Statements[0].(*ast.ExpressionStmt)
+    if !ok {
+        t.Fatalf("The alternative stmt not an expresison stmt, got %T",ifstmt.Alternative.Statements[0])
+    }
+
+    altid,ok:=alt.Expression.(*ast.Identifier)
+    if !ok {
+        t.Fatalf("Expected an id as the alternative statement got %v",alt.Expression)
+    }
+
+    if altid.Token.Value!="y" {
+        t.Errorf("Expected y to the alternate id got %v",altid)
+    }
+}

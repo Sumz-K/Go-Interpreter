@@ -217,3 +217,66 @@ func (ie* InfixExpression) String() string {
     return buf.String()
 }
 
+type Boolean struct {
+    Token token.Token
+    Value bool 
+}
+
+func (b* Boolean) TokenValue() string {
+    return b.Token.Value
+}
+
+func (b *Boolean) ExpressionNode() {}
+
+func(b* Boolean) String() string {
+    return b.TokenValue()
+}
+
+
+type BlockStmt struct {
+    Token token.Token
+    Statements []Statement
+}
+
+func (bs *BlockStmt) StatementNode() {}
+
+func (bs *BlockStmt) TokenValue() string {
+    return bs.Token.Value
+}
+
+func (bs *BlockStmt) String() string{
+    var buf bytes.Buffer
+    buf.WriteString("{")
+    for _,ele:=range bs.Statements {
+        buf.WriteString(ele.String())
+    }
+    buf.WriteString("}")
+    return buf.String()
+}
+
+type IfExpression struct {
+    Token token.Token
+    Condition Expression
+    Consequence *BlockStmt
+    Alternative *BlockStmt
+}
+
+func (ifexp *IfExpression) ExpressionNode() {}
+
+func (ifexp *IfExpression) TokenValue() string {
+    return ifexp.Token.Value
+}
+
+func (ifexp *IfExpression) String() string {
+    var buf bytes.Buffer
+    buf.WriteString("if ")
+    buf.WriteString(ifexp.Condition.String())
+    buf.WriteString(" ")
+    buf.WriteString(ifexp.Condition.String())
+
+    if ifexp.Alternative!=nil {
+        buf.WriteString(" else ")
+        buf.WriteString(ifexp.Alternative.String())
+    }
+    return buf.String()
+}

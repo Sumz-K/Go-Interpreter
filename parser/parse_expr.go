@@ -159,3 +159,73 @@ func (p* Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	ie.RightExpr=p.parseExpression(prec)
 	return ie
 }
+
+func (p* Parser) parseBoolean() ast.Expression{
+	expr:=&ast.Boolean{}
+	expr.Token=p.currToken
+	if expr.Token.Value=="true"{
+		expr.Value=true 
+	} else {
+		expr.Value=false
+	}
+	return expr
+}
+
+
+// (1+2)*3
+func (p* Parser) parseGrouped() ast.Expression {
+	p.next()
+	expr:=p.parseExpression(LOWEST)
+
+	if !p.expected(token.RPAREN) {
+		return nil 
+	}
+	return expr 
+}
+
+// if (a>b) {x} else {y}
+func(p *Parser) parseIfExpression() ast.Expression {
+	expr:=&ast.IfExpression{}
+	expr.Token=p.currToken
+	if !p.expected(token.LPAREN) {
+		return nil 
+	}
+	p.next()
+	expr.Condition=p.parseExpression(LOWEST)
+	if !p.expected(token.RPAREN) {
+		return nil 
+	}
+
+	if !p.expected(token.LBRACE) {
+		return nil 
+	}
+
+	expr.Consequence=p.parseBlock()
+
+	if p.isNext(token.ELSE) {
+		p.next()
+		if !p.expected(token.LBRACE) {
+			return nil 
+		}
+		expr.Alternative=p.parseBlock()
+	}
+
+	return expr
+}
+
+func(p *Parser) parseBlock() *ast.BlockStmt {
+	block:=&ast.BlockStmt{}
+	block.Token=p.currToken
+	block.Statements=[]ast.Statement{}
+
+	p.next()
+
+	for !p.isCurr(token.RBRACE) && !p.isCurr(token.EOF) {
+		stmt:=p.parseStmt()
+		if stmt!=nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.next()
+	}
+	return block 
+}

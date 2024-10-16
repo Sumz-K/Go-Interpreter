@@ -67,7 +67,7 @@ func (l* Lexer) ignoreWhiteSpace() {
     }
 }
 func (l* Lexer) NextToken() token.Token {
-   
+    
     l.ignoreWhiteSpace()
     currChar:=l.char
 

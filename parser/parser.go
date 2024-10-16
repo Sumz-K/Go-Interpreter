@@ -31,6 +31,10 @@ func New(l *lexer.Lexer) *Parser {
     p.registerPrefixFunc(token.INTEGER,p.parseIntLiteral)
     p.registerPrefixFunc(token.MINUS,p.parsePrefixExpression)
     p.registerPrefixFunc(token.BANG,p.parsePrefixExpression)
+    p.registerPrefixFunc(token.TRUE,p.parseBoolean)
+    p.registerPrefixFunc(token.FALSE,p.parseBoolean)
+    p.registerPrefixFunc(token.LPAREN,p.parseGrouped)
+    p.registerPrefixFunc(token.IF,p.parseIfExpression)
 
     p.infixFunc=make(map[token.TokenType]infixParseFn)
     p.registerInfixFunc(token.PLUS,p.parseInfixExpression)
