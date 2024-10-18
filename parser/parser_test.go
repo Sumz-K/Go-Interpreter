@@ -428,3 +428,47 @@ func TestIfElse(t *testing.T) {
         t.Errorf("Expected y to the alternate id got %v",altid)
     }
 }
+
+func TestFunction(t *testing.T) {
+    input:=`fn(x,y) { x + y; }`
+    l:=lexer.New(input)
+    p:=New(l)
+    program:=p.ParseProgram()
+    checkErrors(t,p)
+
+    if len(program.Statements)!=1 {
+        t.Fatalf("Expected one statement got %d",len(program.Statements))
+    }
+
+    stmt,ok:=program.Statements[0].(*ast.ExpressionStmt)
+    if !ok {
+        t.Fatalf("Expected an expression statement got %T",program.Statements[0])
+    }
+
+    fn,ok:=stmt.Expression.(*ast.Function)
+    if !ok {
+        t.Fatalf("Expected a function got %T",stmt.Expression)
+    }
+
+    if len(fn.Params)!=2 {
+        t.Errorf("Expected 2 parameters got %d",len(fn.Params))
+    }
+
+    if fn.Params[0].TokenValue()!="x" {
+        t.Errorf("Expected param name x got %v",fn.Params[0].TokenValue())
+    }
+
+    if fn.Params[1].TokenValue()!="y" {
+        t.Errorf("Expected param name y got %v",fn.Params[1].TokenValue())
+    }
+
+    if len(fn.Body.Statements)!=1 {
+        t.Errorf("Expected one stmt in function body got %d",len(fn.Body.Statements))
+    }
+
+    _,ok=fn.Body.Statements[0].(*ast.ExpressionStmt)
+    if !ok {
+        t.Errorf("Body statement not an expression stmt, got %T",fn.Body.Statements[0])
+    }
+
+}

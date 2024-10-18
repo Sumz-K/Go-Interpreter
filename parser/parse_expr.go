@@ -229,3 +229,60 @@ func(p *Parser) parseBlock() *ast.BlockStmt {
 	}
 	return block 
 }
+
+// fn(x,y) {x+y;}
+func (p* Parser) parseFunction() ast.Expression {
+	expr:=&ast.Function{}
+	expr.Token=p.currToken
+
+	if !p.expected(token.LPAREN) {
+		return nil 
+	}
+
+	expr.Params=p.parseFunctionParams()
+	
+
+	if !p.expected(token.RPAREN) {
+		return nil 
+	}
+	
+	if !p.expected(token.LBRACE) {
+		return nil 
+	}
+	expr.Body=p.parseBlock()
+
+	return expr 
+
+}
+
+// a,b,c,d)
+func (p* Parser) parseFunctionParams() []*ast.Identifier {
+	ids:=[]*ast.Identifier{}
+
+	if p.isNext(token.RPAREN) {
+		p.next()
+		return ids 
+	}
+
+	p.next()
+	id1:=&ast.Identifier{
+		Token: p.currToken,
+		Value: p.currToken.Value,
+	}
+
+	ids = append(ids, id1)
+
+	for !p.isNext(token.RPAREN) {
+		p.next()
+		p.next() //to skip comma 
+
+		ident:=&ast.Identifier{
+			Token: p.currToken,
+			Value: p.currToken.Value,
+		}
+		ids = append(ids, ident)
+	}
+
+	
+	return ids
+}

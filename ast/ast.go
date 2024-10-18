@@ -280,3 +280,31 @@ func (ifexp *IfExpression) String() string {
     }
     return buf.String()
 }
+
+
+type Function struct {
+    Token token.Token
+    Params []*Identifier
+    Body *BlockStmt
+}
+
+func (fn *Function) TokenValue() string {
+    return fn.Token.Value
+}
+
+func (fn *Function) ExpressionNode() {}
+
+func (fn *Function) String() string {
+    var buf bytes.Buffer
+    buf.WriteString("fn")
+    buf.WriteString("(")
+    for _,param:=range fn.Params {
+        buf.WriteString(param.String()+", ")
+    }
+    buf.WriteString(") {")
+    buf.WriteString(fn.Body.String())
+    buf.WriteString("}")
+    return buf.String()
+
+}
+
