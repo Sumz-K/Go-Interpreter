@@ -46,7 +46,7 @@ func New(l *lexer.Lexer) *Parser {
     p.registerInfixFunc(token.LT,p.parseInfixExpression)
     p.registerInfixFunc(token.EQ,p.parseInfixExpression)
     p.registerInfixFunc(token.NOTEQ,p.parseInfixExpression)
-
+    p.registerInfixFunc(token.LPAREN,p.parseCallExpression)
     //Read two tokens to set the current and peek tokens
     p.next()
     p.next()
@@ -59,7 +59,7 @@ func (p *Parser) next() {
     p.peekToken=p.l.NextToken()
 }
 
-func (p* Parser) showErrors() []string {
+func (p* Parser) ShowErrors() []string {
     return p.errors
 }
 
@@ -105,11 +105,9 @@ func (p* Parser) parseReturnStmt() ast.Statement {
 
     p.next()
 
-    for !p.isCurr(token.SEMICOLON) {
-        if p.isCurr(token.EOF) {
-            p.addError(token.SEMICOLON)
-            return nil 
-        }
+    stmt.ReturnValue=p.parseExpression(LOWEST)
+
+    if p.isNext(token.SEMICOLON) {
         p.next()
     }
 
@@ -129,11 +127,14 @@ func (p* Parser) parseLetStmt() ast.Statement {
         Value: p.currToken.Value, //name of that variable
     }
 
-   if !p.expected(token.ASSIGN) { //check if next token is "="
+    if !p.expected(token.ASSIGN) { //check if next token is "="
         return nil
     }
 
-    for !p.isCurr(token.SEMICOLON) {
+    p.next()
+
+    stmt.Value=p.parseExpression(LOWEST)
+    if p.isNext(token.SEMICOLON) {
         p.next()
     }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Sumz-K/Go-Interpreter/ast"
 	"github.com/Sumz-K/Go-Interpreter/token"
+
 )
 
 // for operator precedence ig
@@ -38,6 +39,7 @@ var precedences = map[token.TokenType]int {
 	token.MINUS:SUM,
 	token.ASTERISK:PRODUCT,
 	token.SLASH:PRODUCT,
+	token.LPAREN:CALL,
 
 }
 
@@ -245,7 +247,7 @@ func (p* Parser) parseFunction() ast.Expression {
 	if !p.expected(token.RPAREN) {
 		return nil 
 	}
-	
+
 	if !p.expected(token.LBRACE) {
 		return nil 
 	}
@@ -285,4 +287,38 @@ func (p* Parser) parseFunctionParams() []*ast.Identifier {
 
 	
 	return ids
+}
+
+
+func (p* Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	call:=&ast.CallExpr{
+		Token: p.currToken,
+		Function: function,
+	}
+	call.Arguments=p.parseCallArgs()
+	return call 
+}
+
+// add(2,3) currToken at (
+func(p* Parser) parseCallArgs() []ast.Expression{
+	var args []ast.Expression
+	if p.isNext(token.RPAREN) {
+		p.next()
+		return args 
+	}
+	p.next()
+	args = append(args, p.parseExpression(LOWEST))
+	for !p.isNext(token.RPAREN) {
+		p.next()
+		p.next()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.expected(token.RPAREN) {
+		return nil 
+	}
+
+	return args 
+	
+
 }

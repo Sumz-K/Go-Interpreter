@@ -308,3 +308,29 @@ func (fn *Function) String() string {
 
 }
 
+// for function calls
+type CallExpr struct {
+    Token token.Token // The '(' token
+    Function Expression // a call can be of the form add(2,3) but it can also be of the form fn(x,y){x+y;} (2,3). Now if the function part is made an expression instead of identifier(which also is an expression) we can validate both these calls. Both "add" and "fn(x,y) {x+y;}" ar eessentially still 'expressions'. One is an Identifier struct other is a Function struct but both fulfill the Expression interface
+    Arguments []Expression  // no * because Expression is an interface and interfaces already hold references to concrete types
+}
+
+func (ce *CallExpr) ExpressionNode() {}
+
+func (ce *CallExpr) TokenValue() string {
+    return ce.Token.Value
+}
+
+func (ce *CallExpr) String() string {
+    var buf bytes.Buffer
+    buf.WriteString(ce.Function.String())
+    buf.WriteString("(")
+    for _,arg:=range ce.Arguments {
+        buf.WriteString(arg.String()+", ")
+    }
+    buf.WriteString(")")
+
+    return buf.String()
+}
+
+

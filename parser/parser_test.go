@@ -47,7 +47,7 @@ func TestLetStatements(t *testing.T) {
 }
 
 func checkErrors(t *testing.T, p * Parser) {
-    errors:=p.showErrors()
+    errors:=p.ShowErrors()
     if len(errors) ==0 {
         return
     }
@@ -127,6 +127,20 @@ func TestReturnStatements(t *testing.T) {
     
 }
 
+
+func testID(t *testing.T,exp ast.Expression,value string) bool {
+    ident,ok:=exp.(*ast.Identifier)
+    if !ok {
+        t.Errorf("Expected an identifier got %T",exp)
+        return false
+    }
+
+    if ident.Value!=value {
+        t.Errorf("Expected ID to be %q got %q",value,ident.Value)
+        return false 
+    }
+    return true 
+}
 
 func TestIdentifierExpression(t *testing.T) { 
         input := "foobar;"
@@ -469,6 +483,36 @@ func TestFunction(t *testing.T) {
     _,ok=fn.Body.Statements[0].(*ast.ExpressionStmt)
     if !ok {
         t.Errorf("Body statement not an expression stmt, got %T",fn.Body.Statements[0])
+    }
+
+}
+
+func TestCallExpr(t *testing.T) {
+    input:="add(1,2*3,4+5)"
+    l:=lexer.New(input)
+    p:=New(l)
+    program:=p.ParseProgram()
+    checkErrors(t,p)
+
+    if len(program.Statements)!=1 {
+        t.Fatalf("Expected one statement got %d",len(program.Statements))
+    }
+
+    stmt,ok:=program.Statements[0].(*ast.ExpressionStmt)
+    if !ok {
+        t.Fatalf("Expected an expression statement got %T",program.Statements[0])
+    }
+
+    call,ok:=stmt.Expression.(*ast.CallExpr)
+    if !ok {
+        t.Fatalf("Expected a call expression got %T",stmt.Expression)
+    }
+
+    if !testID(t,call.Function,"add") {
+        return 
+    }
+    if len(call.Arguments)!=3 {
+        t.Errorf("Expected 3 arguments got %d",len(call.Arguments))
     }
 
 }

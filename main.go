@@ -10,9 +10,9 @@ import (
 func main() {
     file,err:=os.Open("monkey/code1.monkey")
     if err!=nil {
-        log.Fatal("Could not open file")
+        log.Fatal("Cannot open file")
     }
     defer file.Close()
-    repl.Start(file)
+    repl.Start(file,os.Stdout)
 
 }
